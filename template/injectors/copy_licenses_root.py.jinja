@@ -1,0 +1,111 @@
+# /// script
+# requires-python = ">=3.9"
+# dependencies = [
+#     "tomli>=2.0.1; python_full_version<'3.11'",
+#     "tomli_w>=1.0.0",
+# ]
+# ///
+"""Copy license files listed in `pyproject.toml` to the root directory.
+
+This script reads the license paths from the `license-files` field in the
+`pyproject.toml` file, then copies the corresponding license files from the
+`LICENSES` directory to the root directory. The copied files are renamed to
+`LICENSE.<license_name>` (e.g., `LICENSE.MIT`).
+"""
+
+import shutil
+import subprocess  # nosec
+import sys
+from pathlib import Path
+from typing import List
+
+
+if sys.version_info < (3, 11):
+    import tomli as tomllib
+else:
+    import tomllib
+
+
+def get_license_paths_from_pyproject() -> List[Path]:
+    """
+    Retrieve license paths from the `license-files` field in `pyproject.toml`.
+
+    This function loads the `pyproject.toml` file and extracts the list of paths
+    specified under `[project.license-files.paths]`.
+
+    Returns:
+        A list of license paths as specified in the `pyproject.toml` file.
+    """
+    with Path("pyproject.toml").open("rb") as file:
+        data = tomllib.load(file)
+
+    return data.get("project", {}).get("license-files", {}).get("paths", [])
+
+
+def copy_and_rename_licenses(license_paths: List[Path]) -> List[Path]:
+    """
+    Copies license files to the root directory, renaming them according to `LICENSE.<license_name>`.
+
+    Args:
+        license_paths: A list of paths to license files.
+    """
+    copied_files = []
+    for license_path in license_paths:
+        license_file = Path(license_path)
+        if license_file.exists():
+            # Extract the license name from the filename (e.g., `MIT` from `LICENSES/MIT.txt`)
+            license_name = license_file.stem
+            # Destination filename: `LICENSE.<license_name>`
+            destination = Path(f"./LICENSE-{license_name}")
+            shutil.copyfile(license_file, destination)
+            copied_files.append(destination)
+
+    return copied_files
+
+
+def annotate_license_files(files_to_annotate: List[Path]) -> None:
+    """
+    Annotates the copied license files using the `reuse` tool.
+
+    Args:
+        header: The copyright header to include in the annotation.
+        files_to_annotate: A list of paths to the license files to be annotated.
+    """
+    reuse_cmd = shutil.which("reuse")
+    if not reuse_cmd:
+        raise FileNotFoundError("The 'reuse' tool is not found in the system PATH.")
+
+    # Prepare the command
+{%- if code_license_id == '' %}
+    command = [
+        reuse_cmd, "annotate",
+        "--copyright", "{{ author }} <{{ author_email }}>",
+        "--license", "{{ code_license_id }}",
+        "--copyright-prefix", "spdx-symbol",
+        "--force-dot-license",
+    ] + [str(file) for file in files_to_annotate]
+{%- else %}
+    command = [
+        reuse_cmd, "annotate",
+        "--copyright", "{{ header }}",
+        "--license", "LicenseRef-PROPRIETARY",
+        "--force-dot-license",
+    ] + [str(file) for file in files_to_annotate]
+{%- endif %}
+
+    # Run the command
+    subprocess.run(command, check=True, shell=False)
+
+
+def main():
+    """Main entry point of the script."""
+    license_paths = get_license_paths_from_pyproject()
+    copy_and_rename_licenses(license_paths)
+    copied_files = copy_and_rename_licenses(license_paths)
+    if copied_files:
+        annotate_license_files(copied_files)
+
+
+if __name__ == "__main__":
+    main()
+

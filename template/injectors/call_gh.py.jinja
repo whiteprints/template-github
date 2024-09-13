@@ -1,0 +1,285 @@
+# /// script
+# requires-python = ">=3.9"
+# dependencies = []
+# ///
+
+"""Automate a series of GitHub-related commands for setting up a repository."""
+
+import asyncio
+import json
+import logging
+import subprocess  # nosec
+import shutil
+import tempfile
+from pathlib import Path
+from subprocess import CalledProcessError
+from typing import Dict, List
+
+
+def get_tool_path(tool_name: str) -> Path:
+    """Get the path of a CLI tool, ensuring it is installed."""
+    tool_path = shutil.which(tool_name)
+    if tool_path is None:
+        raise FileNotFoundError(f"{tool_name} is not installed or not in the system PATH.")
+    return Path(tool_path)
+
+
+def run_command_sync(command: List[str]) -> str:
+    """Run a command synchronously using subprocess with shell=False."""
+    result = subprocess.run(  # nosec
+        command, check=True, text=True, capture_output=True, shell=False
+    )
+    return result.stdout.strip()
+
+
+async def run_command(command: List[str]) -> str:
+    """Run a command asynchronously using asyncio with shell=False."""
+    return await asyncio.to_thread(run_command_sync, command)
+
+
+async def create_labels(gh_path: Path) -> None:
+    """Create labels asynchronously."""
+    labels = [
+        ("license", "ff9999", "Change in licensing"),
+        ("breaking", "ff6666", "Breaking changes"),
+        ("testing", "b2e2b2", "Testing"),
+        ("removal", "e6b8b7", "Removals and Deprecations"),
+        ("style", "e3b1e1", "Code style"),
+        ("python", "a3d2ff", "Update Python code"),
+        ("performance", "7fb2a8", "Performance"),
+        ("dependencies", "b3d1ff", "Dependencies update"),
+        ("ci", "c2d9ed", "Continuous integration"),
+        ("actions", "d3d3d3", "Change GitHub actions"),
+        ("build", "a6b7c1", "Change package metadata"),
+        ("metadata", "f3c88d", "Change package build"),
+        ("tasks", "a6e3d2", "Change package development tasks"),
+        ("refactoring", "e6c8e2", "Refactoring"),
+        ("configuration", "a6e3d2", "Project configuration"),
+        ("container", "b3cde8", "Container"),
+        ("triage", "ffb3b3", "Needs Triage"),
+        ("fix", "b3ffb3", "Fix a bug"),
+        ("size/xs", "b8e186", "An extra small change"),
+        ("size/s", "d2e68e", "A small change"),
+        ("size/m", "f3dc8c", "A medium change"),
+        ("size/l", "f4a582", "A large change"),
+        ("size/xl", "ef6262", "An extra large change")
+    ]
+
+    tasks = [
+        run_command([gh_path, "label", "create", label_name, "--color", color, "--description", description])
+        for label_name, color, description in labels
+    ]
+
+    await asyncio.gather(*tasks)
+
+
+async def create_environment(gh_path: Path, organisation: str, project_name: str, environment_name: str) -> None:
+    """Configure the GitHub environment with reviewers and branch policy."""
+    # Get the reviewer ID using the GitHub CLI
+    reviewer_id = (await run_command([gh_path, "api", "user", "--jq", ".id"])).strip()
+    if not reviewer_id:
+        return
+
+    # Configure the environment using the retrieved reviewer ID
+    try:
+        await run_command([
+            gh_path, "api", "--method", "PUT",
+            f"/repos/{organisation}/{project_name}/environments/{environment_name}",
+        ])
+    except CalledProcessError as e:
+        logging.info(e)
+
+
+async def configure_repository_settings(gh_path: Path, organisation: str, project_name: str) -> None:
+    """Configure repository settings using GitHub CLI."""
+    settings_payload = {
+        "allow_auto_merge": True,
+        "allow_squash_merge": True,
+        "allow_merge_commit": False,
+        "allow_rebase_merge": False,
+        "delete_branch_on_merge": True,
+        "squash_merge_commit_message": "PR_BODY",
+        "squash_merge_commit_title": "PR_TITLE",
+    }
+
+    # Create a temporary file to store the JSON payload
+    with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.json') as temp_file:
+        json.dump(settings_payload, temp_file)
+        temp_file_name = temp_file.name
+
+    await run_command([
+        gh_path, "api", "--method", "PATCH",  # Use the POST method
+        f"/repos/{organisation}/{project_name}",
+        "--input", temp_file_name
+    ])
+
+
+async def configure_environment(
+    gh_path: Path,
+    *,
+    organisation: str,
+    project_name: str,
+    environment_name: str,
+    reviewer: bool,
+) -> None:
+    """Configure the GitHub environment with reviewers and branch policy."""
+    # Get the reviewer ID using the GitHub CLI
+    command = [
+        gh_path, "api", "--method", "PUT",
+        f"/repos/{organisation}/{project_name}/environments/{environment_name}",
+        "-F", "wait_timer=0",
+        "-F", "deployment_branch_policy[protected_branches]=true",
+        "-F", "deployment_branch_policy[custom_branch_policies]=false",
+    ]
+    if reviewer:
+        reviewer_id = (await run_command([gh_path, "api", "user", "--jq", ".id"])).strip()
+        if not reviewer_id:
+            return
+
+        command.extend([
+            "-F", "prevent_self_review=false",
+            "-F", "reviewers[][type]=User",
+            "-F", f"reviewers[][id]={reviewer_id}",
+        ])
+    # Configure the environment using the retrieved reviewer ID
+    try:
+        await run_command(command)
+    except CalledProcessError as e:
+        logging.info(e)
+
+
+async def configure_ruleset(
+    # target,
+    rule_path: Path,
+    *,
+    # name: str,
+    # include: List[str],
+    gh_path: Path,
+    organisation: str,
+    project_name: str,
+    # bypass_actors: List[Dict[str, str]],
+) -> None:
+    """Configure a branch ruleset instead of branch protection."""
+    # Fetch the repository ID
+    command = [
+        gh_path, "repo", "view", f"{organisation}/{project_name}",
+        "--json", "id", "--jq", ".id"
+    ]
+    repo_id = (await run_command(command)).strip()
+
+    # Load json
+    with rule_path.open("r", encoding="utf-8") as rule_file:
+        ruleset_payload = json.load(rule_file)
+
+    ruleset_payload['id'] = repo_id
+
+    # Create a temporary file to store the JSON payload
+    with tempfile.NamedTemporaryFile(delete=False, mode='w', newline='', suffix='.json') as temp_file:
+        json.dump(ruleset_payload, temp_file)
+        temp_file_name = temp_file.name
+
+    # Construct the command with all arguments inline
+    command = [
+        gh_path, "api", "--method", "POST",
+        (
+            f"/repos/{organisation}/{project_name}/rulesets"
+            if ruleset_payload.get("source_type") == "Repository"
+            else f"/orgs/{organisation}/rulesets"
+        ),
+        "--input", temp_file_name,
+    ]
+    try:
+        await run_command(command)
+    except CalledProcessError as e:
+        logging.info(e)
+
+
+async def update_workflow_permissions(gh_path: Path, organisation: str, project_name: str) -> None:
+    """Update GitHub Actions workflow permissions to allow approving pull requests."""
+    await run_command([
+        gh_path, "api", "--method", "PUT",
+        f"/repos/{organisation}/{project_name}/actions/permissions/workflow",
+        "-f", "default_workflow_permissions=read",
+        "-F", "can_approve_pull_request_reviews=true"
+    ])
+
+
+async def run_all_commands(gh_path: Path, tox_path: Path, git_path: Path) -> None:
+    """Run all the necessary commands based on the provided conditions."""
+
+    # Example condition and variables - replace these with actual logic
+    organisation = "{{ organisation }}"
+    project_name = "{% include pathjoin('includes', 'project_slug.jinja') %}"
+    description = "{{ description }}"
+    rules_directory = Path("github_protection_ruleset")
+
+    # Step 1: Rename the repo and edit settings
+    await asyncio.gather(
+        run_command([gh_path, "repo", "rename", "--yes", project_name]),
+        run_command([
+            gh_path, "repo", "edit", "--enable-discussions", "--enable-issues", "--default-branch", "main"
+        ]),
+        configure_repository_settings(
+            gh_path=gh_path,
+            organisation=organisation,
+            project_name=project_name,
+        ),
+    )
+
+    # Step 2: Apply branch protection rules
+    await asyncio.gather(
+        create_environment(
+            gh_path=gh_path,
+            organisation=organisation,
+            project_name=project_name,
+            environment_name="tests"
+        ),
+        create_environment(
+            gh_path=gh_path,
+            organisation=organisation,
+            project_name=project_name,
+            environment_name="coverage"
+        ),
+    )
+    await asyncio.gather(
+        *[
+            configure_ruleset(
+                rule_path,
+                gh_path=gh_path,
+                organisation=organisation,
+                project_name=project_name,
+            ) for rule_path in rules_directory.glob("**/*.json")
+        ],
+    )
+    await asyncio.gather(
+        configure_environment(
+            gh_path=gh_path,
+            organisation=organisation,
+            project_name=project_name,
+            environment_name="container-test-deploy",
+            reviewer=False,
+        ),
+        configure_environment(
+            gh_path=gh_path,
+            organisation=organisation,
+            project_name=project_name,
+            environment_name="container-deploy",
+            reviewer=True,
+        ),
+    )
+
+    # Step 3: Create labels asynchronously
+    await create_labels(gh_path)
+
+
+def main() -> None:
+    """Main script."""
+    gh_path = get_tool_path("gh")
+    tox_path = get_tool_path("tox")
+    git_path = get_tool_path("git")
+
+    asyncio.run(run_all_commands(gh_path=gh_path, tox_path=tox_path, git_path=git_path))
+
+
+if __name__ == "__main__":
+    main()
