@@ -1,0 +1,70 @@
+# /// script
+# requires-python = ">=3.9"
+# dependencies = [
+#     "tomli>=2.0.1; python_full_version<'3.11'",
+#     "tomli_w>=1.0.0",
+# ]
+# ///
+import sys
+from pathlib import Path
+
+import tomli_w
+
+
+if sys.version_info < (3, 11):
+    import tomli as tomllib
+else:
+    import tomllib
+
+
+def update_hatch_toml() -> None:
+    """Add GitHub substitution rules to the `hatch.toml` file.
+
+    This function updates the 'metadata.hooks.fancy-pypi-readme' section of the
+    `hatch.toml` file with substitution rules to transform local markdown links
+    (e.g., `CONTRIBUTING.md`, `LICENSE.md`, `MAINTAINERS.md`) to GitHub-hosted
+    links in the README.
+    """
+    # Load the TOML configuration using tomli
+    hatch_toml_path = Path("hatch.toml")
+    with hatch_toml_path.open("rb") as file:
+        config = tomllib.load(file)
+
+    # Example repository URL, replace with actual URL logic if needed
+    repository_url = "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}"
+
+    # Define substitution rules for the fancy-pypi-readme hook
+    substitutions = config.setdefault("metadata", {}).setdefault("hooks", {}).setdefault("fancy-pypi-readme", {})
+
+    # Add substitution rules for markdown links
+    substitutions["substitutions"] = [
+        {
+            "pattern": r'\[INSTALL.md\]\((?!https?://)\S+?\)',
+            "replacement": f'[INSTALL.md]({repository_url}/blob/main/INSTALL.md)',
+        },
+        {
+            "pattern": r'\[CONTRIBUTING.md\]\((?!https?://)\S+?\)',
+            "replacement": f'[CONTRIBUTING.md]({repository_url}/blob/main/CONTRIBUTING.md)',
+        },
+        {
+            "pattern": r'\[MAINTAINERS.md\]\((?!https?://)\S+?\)',
+            "replacement": f'[MAINTAINERS.md]({repository_url}/blob/main/MAINTAINERS.md)',
+        },
+        {
+            "pattern": r'\]\(docs/_static/banner.svg\)"',
+            "replacement": (
+                '](https://raw.githubusercontent.com/'
+                f"{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}"
+                '/refs/heads/main/docs/_static/banner.svg)'
+            ),
+        },
+    ]
+
+    # Write the updated configuration back to hatch.toml using tomli_w
+    with hatch_toml_path.open("wb") as file:
+        tomli_w.dump(config, file)
+
+
+if __name__ == "__main__":
+    # Update the hatch.toml configuration with GitHub substitution rules
+    update_hatch_toml()

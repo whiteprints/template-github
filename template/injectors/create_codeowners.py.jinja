@@ -1,0 +1,44 @@
+# /// script
+# requires-python = ">=3.9"
+# dependencies = []
+# ///
+"""Module to update `pyproject.toml` with new entry points."""
+
+import subprocess  # nosec
+import shutil
+from pathlib import Path
+from typing import Optional
+
+
+def get_github_username() -> Optional[str]:
+    """Retrieve the GitHub username using the gh CLI."""
+    gh_path = shutil.which("gh")
+    if gh_path is None:
+        return None
+
+    result = subprocess.run(  # nosec
+        [gh_path, "api", "user", "-q", ".login"],
+        text=True,
+        capture_output=True,
+        check=True
+    )
+    return result.stdout.strip()
+
+
+def main() -> None:
+    """Create a codeowner file."""
+    containerfile_path = Path(".github") / "CODEOWNERS"
+    codeowner = get_github_username()
+    if codeowner is None:
+        return
+
+    containerfile_path.write_text(
+        "# All files are by default owned by this user, "
+        "unless a more specific ownership\n"
+        "# rule is set below.\n"
+        f"* @{codeowner}"
+    )
+
+
+if __name__ == "__main__":
+    main()

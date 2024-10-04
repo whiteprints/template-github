@@ -1,0 +1,78 @@
+_subdirectory: "template"
+_jinja_extensions:
+  - copier_templates_extensions.TemplateExtensionLoader
+  - extensions/context.py:ContextUpdater
+_tasks:
+  - ["uv", "run", "injectors/create_codeowners.py"]
+  - ["uv", "run", "injectors/inject_urls.py"]
+  - ["uv", "run", "injectors/pre-commit-ci.py"]
+  - ["uv", "run", "injectors/md_files.py"]
+  - ["uv", "run", "injectors/hatch.py"]
+  - ["uv", "run", "injectors/inject_containerfile.py"]
+  - ["uv", "run", "injectors/update_docs.py"]
+  - command: [
+    "uvx", "--quiet", "--no-progress", "reuse", "annotate",
+    "--copyright", "{{ author }} <{{ author_email }}>",
+    "--license", "{{ code_license_id }}",
+    "--copyright-prefix", "spdx-symbol",
+    "--recursive", "--style", "python",
+    ".github/dependabot.yml", ".github/release-drafter.yml", ".github/CODEOWNERS",
+    ".github/workflows/", ".github/ISSUE_TEMPLATE",
+    "pyproject.toml", "hatch.toml",
+  ]
+    when: "{{ code_license_id != '' }}"
+  - command: [
+    "uvx", "--quiet", "--no-progress", "reuse", "annotate",
+    "--copyright", "SPDX-FileCopyrightText: {{ header }}",
+    "--license", "LicenseRef-PROPRIETARY",
+    "--recursive", "--style", "python",
+    ".github/dependabot.yml", ".github/release-drafter.yml",  ".github/CODEOWNERS",
+    ".github/workflows/", ".github/ISSUE_TEMPLATE",
+    "pyproject.toml", "hatch.toml",
+  ]
+    when: "{{ code_license_id == '' }}"
+  - command: [
+    "uvx", "--quiet", "--no-progress", "reuse", "annotate",
+    "--copyright", "{{ author }} <{{ author_email }}>",
+    "--license", "{{ code_license_id }}",
+    "--copyright-prefix", "spdx-symbol",
+    "--force-dot-license",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+  ]
+    when: "{{ code_license_id != '' }}"
+  - command: [
+    "uvx", "--quiet", "--no-progress", "reuse", "annotate",
+    "--copyright", "SPDX-FileCopyrightText: {{ header }}",
+    "--license", "LicenseRef-PROPRIETARY",
+    "--force-dot-license",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+  ]
+    when: "{{ code_license_id == '' }}"
+  - command: [
+    "uvx", "--quiet", "--no-progress", "reuse", "annotate",
+    "--copyright", "{{ author }} <{{ author_email }}>",
+    "--license", "{{ code_license_id }}",
+    "--copyright-prefix", "spdx-symbol",
+    "--style", "html",
+    "docs/artifacts_verification.md",
+  ]
+    when: "{{ resources_license_id != '' }}"
+  - command: [
+    "uvx", "--quiet", "--no-progress", "reuse", "annotate",
+    "--copyright", "SPDX-FileCopyrightText: {{ header }}",
+    "--license", "LicenseRef-PROPRIETARY",
+    "--style", "html",
+    "docs/artifacts_verification.md",
+  ]
+    when: "{{ resources_license_id == '' }}"
+  - ["git", "add", "docs/", ".github"]
+  - ["uvx", "--quiet", "--no-progress", "tox", "run", "-e", "autofix"]
+  - ["git", "add", "docs/", ".github"]
+  - ["git", "add", "--update"]
+  - ["git", "commit", "--message", "feat: ✨ add GitHub CI/CD"]
+  - command: ["gh", "repo", "create", "{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}", "--private", "--push", "--source", ".", "--description", "{{ description }}"]
+    when: "{{ code_license_id == '' or resources_license_id == '' }}"
+  - command: ["gh", "repo", "create", "{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}", "--public", "--push", "--source", ".", "--description", "{{ description }}"]
+    when: "{{ code_license_id != '' and resources_license_id != '' }}"
+  - ["uv", "run", "injectors/call_gh.py"]
+  - ["rm", "-r", "injectors"]

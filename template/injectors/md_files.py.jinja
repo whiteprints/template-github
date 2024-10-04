@@ -1,0 +1,212 @@
+# /// script
+# requires-python = ">=3.9"
+# dependencies = []
+# ///
+
+"""Update Markdown files."""
+
+
+from pathlib import Path
+
+
+def update_install() -> None:
+    """Update INSTALL.md."""
+    install_file = Path("INSTALL.md")
+    install = install_file.read_text("utf-8")
+    source = """
+Once you have obtained a copy of the sources, you can install the package with
+[pip].
+
+To install with [pip] from the source tree:
+
+```console
+pip install .
+```
+"""
+    if source not in install:
+        raise ValueError("Replacement failed.")
+
+    install = install.replace(
+        source,
+"""
+To install with [pip] from [GitHub] run the command:
+
+```console
+pip install git+ssh://git@github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}
+```
+
+[GitHub]: https://github.com
+[git]: https://git-scm.com/
+"""
+    )
+    install_file.write_text(install, encoding="utf-8")
+
+
+def update_security() -> None:
+    """Update SECURITY.md."""
+    security_file = Path("SECURITY.md")
+    security = security_file.read_text("utf-8")
+    source = "Vulnerabilities can be reported by sending an encrypted email to a [core member]."
+    if source not in security:
+        raise ValueError("Replacement failed.")
+
+    security = security.replace(
+        source,
+        (
+            "Vulnerabilities can be reported by sending an encrypted email to a [core member]\n"
+            "or using **[GitHub draft security advisory](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/security/advisories/new)** (recommended)."
+            "\n\n"
+            "**Do not raise a public issue.**"
+        ),
+    )
+    security_file.write_text(security, encoding="utf-8")
+
+
+def update_contributing() -> None:
+    """Update CONTRIBUTING.md."""
+    contributing_file = Path("CONTRIBUTING.md")
+    contributing = contributing_file.read_text("utf-8")
+    source = "To report identified bugs, please email any [core member]."
+    if source not in contributing:
+        raise ValueError("Replacement failed.")
+
+    contributing = contributing.replace(
+        source,
+        (
+            "To report identified bugs, please fill a."
+            "[GitHub bug report issue](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/issues/new?template=bug_report.yml)."
+        ),
+    )
+    source = "To request features, please email any [core members]."
+    if source not in contributing:
+        raise ValueError("Replacement failed.")
+
+    contributing = contributing.replace(
+        source,
+        (
+            "To request features, please "
+            "[open a discussion](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/discussions/categories/ideas)"
+            "\n\n"
+            "Once the enhancement has been discussed, fill a [GitHub feature issue](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/issues/new?template=feature_request.yml)."
+        ),
+    )
+    source = """
+It is recommended to contact [core members] before starting work on any
+changes. This will give you a chance to discuss your ideas with the owners and
+validate your approach.
+
+Once your contribution is ready, ask one of the [core members] to merge it into
+the main branch.
+"""
+    if source not in contributing:
+        raise ValueError("Replacement failed.")
+
+    contributing = contributing.replace(
+        source,
+"""
+Please ensure that your contribution is resolving a known [issue]. If not,
+please create an associated [issue] first.
+
+Once your code and your issue are ready, create a [GitHub] [Pull Request]
+containing your modification and referencing the associated [issue].
+
+If you don't know or are not sure on how to create a Pull Request, follow
+the tutorial [creating a Pull Request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request).
+
+[GitHub]: https://github.com/
+[Pull Request]: https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/pulls
+[issue]: https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/issues
+""",
+    )
+    contributing_file.write_text(contributing, encoding="utf-8")
+
+
+def update_readme() -> None:
+    """Update README.md."""
+    readme_file = Path("README.md")
+    readme = readme_file.read_text("utf-8")
+    source = """        <a href="https://spdx.dev/learn/areas-of-interest/licensing/"><img alt="SPDX Licensing" src="https://img.shields.io/badge/SPDX-licensing-0080FF.svg?logo=SPDX"/></a>"""
+    if source not in readme:
+        raise ValueError("Replacement failed.")
+
+    readme = readme.replace(
+        source,
+"""        <a href="https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/discussions"><img alt="GitHub Discussions" src="https://img.shields.io/github/discussions/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}.svg?logo=GitHub"></a>
+        <a href="https://spdx.dev/learn/areas-of-interest/licensing/"><img alt="SPDX Licensing" src="https://img.shields.io/badge/SPDX-licensing-0080FF.svg?logo=SPDX"/></a>""",
+    )
+    readme_file.write_text(readme, encoding="utf-8")
+
+
+def update_index() -> None:
+    """Update index.md."""
+    index_file = Path("docs/index.md")
+    index = index_file.read_text("utf-8")
+    source = """
+Contributing <contributing_index>
+"""
+    if source not in index:
+        raise ValueError("Replacement failed.")
+
+    index = index.replace(
+        source,
+"""
+Releases <https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/releases>
+Contributing <contributing_index>
+""",
+    )
+    index_file.write_text(index, encoding="utf-8")
+
+
+def update_project() -> None:
+    """Update project.md."""
+    project_file = Path("docs/project.md")
+    project = project_file.read_text("utf-8")
+    source = """
+The project is organised as follow.
+"""
+    if source not in project:
+        raise ValueError("Replacement failed.")
+
+    project = project.replace(
+        source,
+"""
+The project is hosted on [https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}.git](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}.git).
+
+It is organised as follow.
+""",
+    )
+    project_file.write_text(project, encoding="utf-8")
+
+
+def update_guide() -> None:
+    """Update guide.md."""
+    guide_file = Path("docs/guide.md")
+    guide= guide_file.read_text("utf-8")
+    source = """
+Quickstart <quickstart>
+"""
+    if source not in guide:
+        raise ValueError("Replacement failed.")
+
+    guide = guide.replace(
+        source,
+"""
+Quickstart <quickstart>
+Verifying Artifacts <artifacts_verification>
+""",
+    )
+    guide_file.write_text(guide, encoding="utf-8")
+
+
+def main() -> None:
+    update_install()
+    update_security()
+    update_contributing()
+    update_readme()
+    update_index()
+    update_project()
+    update_guide()
+
+
+if __name__ == "__main__":
+    main()

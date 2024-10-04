@@ -1,0 +1,56 @@
+# /// script
+# requires-python = ">=3.9"
+# dependencies = []
+# ///
+"""Module to update `pyproject.toml` with new entry points."""
+
+from pathlib import Path
+
+
+def main() -> None:
+    """Edit documentation configuration file."""
+    docs_file = Path("docs/conf.py")
+    docs = docs_file.read_text()
+    # We handle the case when the dict is empty or contains some elements.
+    source_1 = """
+html_theme_options = {
+"""
+    source_2 = """
+html_theme_options = {}
+"""
+    if not (source_1 in docs or source_2 in docs):
+        raise ValueError("Replacement failed.")
+
+    docs = docs.replace(
+        source_1,
+"""
+html_theme_options = {
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}",
+            "icon": "fa-brands fa-square-github",
+            "type": "fontawesome",
+        },
+    ],
+""",
+    )
+    docs = docs.replace(
+        source_2,
+"""
+html_theme_options = {
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}",
+            "icon": "fa-brands fa-square-github",
+            "type": "fontawesome",
+        },
+    ],
+}
+""",
+    )
+    docs_file.write_text(docs)
+
+if __name__ == "__main__":
+    main()
