@@ -12,7 +12,7 @@ _tasks:
   - ["uv", "run", "injectors/update_docs.py"]
   - command: [
     "uvx", "--quiet", "--no-progress", "reuse", "annotate",
-    "--copyright", "{{ author }} <{{ author_email }}>",
+    "--copyright", "{{ copyright_holder }} <{{ copyright_holder_email }}>",
     "--license", "{{ code_license_id }}",
     "--copyright-prefix", "spdx-symbol",
     "--recursive", "--style", "python",
@@ -33,7 +33,7 @@ _tasks:
     when: "{{ code_license_id == '' }}"
   - command: [
     "uvx", "--quiet", "--no-progress", "reuse", "annotate",
-    "--copyright", "{{ author }} <{{ author_email }}>",
+    "--copyright", "{{ copyright_holder }} <{{ copyright_holder_email }}>",
     "--license", "{{ code_license_id }}",
     "--copyright-prefix", "spdx-symbol",
     "--force-dot-license",
@@ -50,8 +50,8 @@ _tasks:
     when: "{{ code_license_id == '' }}"
   - command: [
     "uvx", "--quiet", "--no-progress", "reuse", "annotate",
-    "--copyright", "{{ author }} <{{ author_email }}>",
-    "--license", "{{ code_license_id }}",
+    "--copyright", "{{ copyright_holder }} <{{ copyright_holder_email }}>",
+    "--license", "{{ resources_license_id }}",
     "--copyright-prefix", "spdx-symbol",
     "--style", "html",
     "docs/artifacts_verification.md",
