@@ -43,14 +43,14 @@ def update_pyproject_toml(
         data = tomllib.load(file)
         urls = data.setdefault("project", {}).setdefault("urls", {})
 
-        urls["documentation"] = "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}"
-        urls["discussions"] = "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/discussions"
-        urls["homepage"] = "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}"
-        urls["repository"] = "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}"
-        urls["changelog"] = "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/releases"
-        urls["download"] = "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/releases"
-        urls["issues"] = "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/issues"
-        urls["integration"] = "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/actions"
+        urls["documentation"] = "https://github.com/{{ organisation }}/{{ project_slug }}"
+        urls["discussions"] = "https://github.com/{{ organisation }}/{{ project_slug }}/discussions"
+        urls["homepage"] = "https://github.com/{{ organisation }}/{{ project_slug }}"
+        urls["repository"] = "https://github.com/{{ organisation }}/{{ project_slug }}"
+        urls["changelog"] = "https://github.com/{{ organisation }}/{{ project_slug }}/releases"
+        urls["download"] = "https://github.com/{{ organisation }}/{{ project_slug }}/releases"
+        urls["issues"] = "https://github.com/{{ organisation }}/{{ project_slug }}/issues"
+        urls["integration"] = "https://github.com/{{ organisation }}/{{ project_slug }}/actions"
 
     with Path("pyproject.toml").open("wb") as file:
         tomli_w.dump(data, file)
@@ -59,9 +59,9 @@ def update_pyproject_toml(
 def main() -> None:
     """Update the pyproject.toml entrypoint."""
     update_pyproject_toml(
-        entry_point_name="{% include pathjoin('includes', 'project_slug.jinja') %}",
-        module_name="{% include pathjoin('includes', 'package_name.jinja') %}.cli.entrypoint",
-        function_name="{% include pathjoin('includes', 'package_name.jinja') %}",
+        entry_point_name="{{ project_slug }}",
+        module_name="{{ package_name }}.cli.entrypoint",
+        function_name="{{ package_name }}",
     )
 
 

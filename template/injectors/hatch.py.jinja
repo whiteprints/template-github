@@ -31,7 +31,7 @@ def update_hatch_toml() -> None:
         config = tomllib.load(file)
 
     # Example repository URL, replace with actual URL logic if needed
-    repository_url = "https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}"
+    repository_url = "https://github.com/{{ organisation }}/{{ project_slug }}"
 
     # Define substitution rules for the fancy-pypi-readme hook
     substitutions = config.setdefault("metadata", {}).setdefault("hooks", {}).setdefault("fancy-pypi-readme", {})
@@ -54,7 +54,7 @@ def update_hatch_toml() -> None:
             "pattern": r'\]\(docs/_static/banner.svg\)"',
             "replacement": (
                 '](https://raw.githubusercontent.com/'
-                f"{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}"
+                f"{{ organisation }}/{{ project_slug }}"
                 '/refs/heads/main/docs/_static/banner.svg)'
             ),
         },

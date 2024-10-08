@@ -9,9 +9,9 @@ body:
       value: |
         **Thanks :heart: for taking the time to fill out this feature request report!**
 
-        This form is for bug report **ONLY**. If you have a problem or a question, we kindly ask that you check the [discussion section](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/discussions/categories/q-a).
+        This form is for bug report **ONLY**. If you have a problem or a question, we kindly ask that you check the [discussion section](https://github.com/{{ organisation }}/{{ project_slug }}/discussions/categories/q-a).
 
-        We are also happy to accept contributions from our users 🚀 by means of [pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests?platform=linux). For more details see [here](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/blob/main/CONTRIBUTING.md).
+        We are also happy to accept contributions from our users 🚀 by means of [pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests?platform=linux). For more details see [here](https://github.com/{{ organisation }}/{{ project_slug }}/blob/main/CONTRIBUTING.md).
   - type: input
     id: contact
     attributes:
@@ -25,7 +25,7 @@ body:
     attributes:
       label: Code of Conduct
       description: |
-        By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/blob/main/CODE_OF_CONDUCT.md).
+        By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/{{ organisation }}/{{ project_slug }}/blob/main/CODE_OF_CONDUCT.md).
       options:
         - label: I agree to follow this project's Code of Conduct
           required: true

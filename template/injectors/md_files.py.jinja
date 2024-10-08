@@ -32,7 +32,7 @@ pip install .
 To install with [pip] from [GitHub] run the command:
 
 ```console
-pip install git+ssh://git@github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}
+pip install git+ssh://git@github.com/{{ organisation }}/{{ project_slug }}
 ```
 
 [GitHub]: https://github.com
@@ -54,7 +54,7 @@ def update_security() -> None:
         source,
         (
             "Vulnerabilities can be reported by sending an encrypted email to a [core member]\n"
-            "or using **[GitHub draft security advisory](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/security/advisories/new)** (recommended)."
+            "or using **[GitHub draft security advisory](https://github.com/{{ organisation }}/{{ project_slug }}/security/advisories/new)** (recommended)."
             "\n\n"
             "**Do not raise a public issue.**"
         ),
@@ -74,7 +74,7 @@ def update_contributing() -> None:
         source,
         (
             "To report identified bugs, please fill a."
-            "[GitHub bug report issue](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/issues/new?template=bug_report.yml)."
+            "[GitHub bug report issue](https://github.com/{{ organisation }}/{{ project_slug }}/issues/new?template=bug_report.yml)."
         ),
     )
     source = "To request features, please email any [core members]."
@@ -85,9 +85,9 @@ def update_contributing() -> None:
         source,
         (
             "To request features, please "
-            "[open a discussion](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/discussions/categories/ideas)"
+            "[open a discussion](https://github.com/{{ organisation }}/{{ project_slug }}/discussions/categories/ideas)"
             "\n\n"
-            "Once the enhancement has been discussed, fill a [GitHub feature issue](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/issues/new?template=feature_request.yml)."
+            "Once the enhancement has been discussed, fill a [GitHub feature issue](https://github.com/{{ organisation }}/{{ project_slug }}/issues/new?template=feature_request.yml)."
         ),
     )
     source = """
@@ -114,8 +114,8 @@ If you don't know or are not sure on how to create a Pull Request, follow
 the tutorial [creating a Pull Request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request).
 
 [GitHub]: https://github.com/
-[Pull Request]: https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/pulls
-[issue]: https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/issues
+[Pull Request]: https://github.com/{{ organisation }}/{{ project_slug }}/pulls
+[issue]: https://github.com/{{ organisation }}/{{ project_slug }}/issues
 """,
     )
     contributing_file.write_text(contributing, encoding="utf-8")
@@ -131,7 +131,7 @@ def update_readme() -> None:
 
     readme = readme.replace(
         source,
-"""        <a href="https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/discussions"><img alt="GitHub Discussions" src="https://img.shields.io/github/discussions/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}.svg?logo=GitHub"></a>
+"""        <a href="https://github.com/{{ organisation }}/{{ project_slug }}/discussions"><img alt="GitHub Discussions" src="https://img.shields.io/github/discussions/{{ organisation }}/{{ project_slug }}.svg?logo=GitHub"></a>
         <a href="https://spdx.dev/learn/areas-of-interest/licensing/"><img alt="SPDX Licensing" src="https://img.shields.io/badge/SPDX-licensing-0080FF.svg?logo=SPDX"/></a>""",
     )
     readme_file.write_text(readme, encoding="utf-8")
@@ -150,7 +150,7 @@ Contributing <contributing_index>
     index = index.replace(
         source,
 """
-Releases <https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/releases>
+Releases <https://github.com/{{ organisation }}/{{ project_slug }}/releases>
 Contributing <contributing_index>
 """,
     )
@@ -170,7 +170,7 @@ The project is organised as follow.
     project = project.replace(
         source,
 """
-The project is hosted on [https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}.git](https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}.git).
+The project is hosted on [https://github.com/{{ organisation }}/{{ project_slug }}.git](https://github.com/{{ organisation }}/{{ project_slug }}.git).
 
 It is organised as follow.
 """,

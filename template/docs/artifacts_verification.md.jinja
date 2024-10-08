@@ -6,7 +6,7 @@ You can verify the authenticity of release artifacts using [cosign]. To do so, r
 cosign verify-blob \
     --new-bundle-format \
     --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-    --certificate-identity-regexp="^https://github.com/{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}/.github/workflows/upload_artifacts.yml?" \
+    --certificate-identity-regexp="^https://github.com/{{ organisation }}/{{ project_slug }}/.github/workflows/upload_artifacts.yml?" \
     --bundle <path_to_the_artifact>.sigstore.json \
     <path_to_the_artifact>
 ```
