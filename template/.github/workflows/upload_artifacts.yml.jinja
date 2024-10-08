@@ -1,4 +1,3 @@
-{%- import pathjoin('includes', 'latest_python.jinja') as var -%}
 {%- raw %}
 name: Upload Release Artifacts
 
@@ -104,10 +103,10 @@ jobs:
       matrix:
         python:
 {%- endraw %}
-{%- for i in range(target_python_version[3:] | int, var.latest_python) %}
+{%- for i in range(target_python_version[3:] | int, latest_python) %}
           - "3.{{ i }}"
 {%- endfor %}
-          - "3.{{ var.latest_python }}"
+          - "3.{{ latest_python }}"
 {%- raw %}
         os:
           - ubuntu-latest

@@ -1,7 +1,8 @@
 _subdirectory: "template"
 _jinja_extensions:
-  - copier_templates_extensions.TemplateExtensionLoader
-  - extensions/context.py:ContextUpdater
+  - jinja2_time.TimeExtension
+  - whiteprints_template_context.context.ContextUpdater
+  - whiteprints_template_context.filters.WhiteprintsFilters
 _tasks:
   - ["uv", "run", "injectors/create_codeowners.py"]
   - ["uv", "run", "injectors/inject_urls.py"]
@@ -70,9 +71,9 @@ _tasks:
   - ["git", "add", "docs/", ".github"]
   - ["git", "add", "--update"]
   - ["git", "commit", "--message", "feat: ✨ add GitHub CI/CD"]
-  - command: ["gh", "repo", "create", "{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}", "--private", "--push", "--source", ".", "--description", "{{ description }}"]
+  - command: ["gh", "repo", "create", "{{ organisation }}/{{ project_slug }}", "--private", "--push", "--source", ".", "--description", "{{ description }}"]
     when: "{{ code_license_id == '' or resources_license_id == '' }}"
-  - command: ["gh", "repo", "create", "{{ organisation }}/{% include pathjoin('includes', 'project_slug.jinja') %}", "--public", "--push", "--source", ".", "--description", "{{ description }}"]
+  - command: ["gh", "repo", "create", "{{ organisation }}/{{ project_slug }}", "--public", "--push", "--source", ".", "--description", "{{ description }}"]
     when: "{{ code_license_id != '' and resources_license_id != '' }}"
   - ["uv", "run", "injectors/call_gh.py"]
   - ["rm", "-r", "injectors"]
