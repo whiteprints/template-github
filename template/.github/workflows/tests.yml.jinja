@@ -85,13 +85,6 @@ jobs:
         with:
           version: "latest"
           enable-cache: true
-      - name: Install project
-        run: |
-          uv sync --python ${{ matrix.python }}
-      - name: Run Pyright
-        uses: jakebailey/pyright-action@v2
-        with:
-          python-version: "${{ matrix.python }}"
       - name: Run the test suite
         run: |
           uvx --quiet --no-progress --with tox-uv tox run -e ${{ matrix.tox_env }}
@@ -128,6 +121,13 @@ jobs:
         with:
           version: "latest"
           enable-cache: true
+      - name: Install project
+        run: |
+          uv sync --python ${{ matrix.python }}
+      - name: Run Pyright
+        uses: jakebailey/pyright-action@v2
+        with:
+          python-version: "${{ matrix.python }}"
       - name: Pick environment to run
         run: |
           import os;
