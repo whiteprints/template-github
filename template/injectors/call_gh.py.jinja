@@ -41,6 +41,8 @@ async def create_labels(gh_path: Path) -> None:
     """Create labels asynchronously."""
     labels = [
         ("license", "ff9999", "Change in licensing"),
+        ("installation", "ea9c5f", "Package installation"),
+        ("architecture", "f0d11b", "Architecture change"),
         ("breaking", "ff6666", "Breaking changes"),
         ("testing", "b2e2b2", "Testing"),
         ("removal", "e6b8b7", "Removals and Deprecations"),
