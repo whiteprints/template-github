@@ -7,7 +7,7 @@ Verify the integrity and provenance of an artifact using its associated cryptogr
 You can verify an attestation with the [GitHub command line](https://cli.github.com/manual/gh_attestation_verify) by running:
 
 ```console
-gh attestation verify <path_to_the_release_artifact> --repo {{ organisation }}/{{ package_slug }}
+gh attestation verify <path_to_the_release_artifact> --repo {{ organisation }}/{{ project_slug }}
 ```
 
 
@@ -17,7 +17,7 @@ You also can verify the authenticity of release artifacts using [cosign]. To do 
 cosign verify-blob \
     --new-bundle-format \
     --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-    --certificate-identity-regexp="^https://github.com/{{ organisation }}/{{ package_slug }}/.github/workflows/upload_artifacts.yml?" \
+    --certificate-identity-regexp="^https://github.com/{{ organisation }}/{{ project_slug }}/.github/workflows/upload_artifacts.yml?" \
     --bundle <path_to_the_release_artifact>.sigstore.json \
     <path_to_the_release_artifact>
 ```
