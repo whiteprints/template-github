@@ -6,9 +6,51 @@
 
 from pathlib import Path
 
+# linkcheck_ignore = [
+    # r"https://pypi\.org/project/.*",
+    # r"https://.*\.readthedocs\.io/en/stable/",
+# ]
 
-def main() -> None:
-    """Edit documentation configuration file."""
+
+def patch_linkcheck() -> None:
+    docs_file = Path("docs/conf.py")
+    docs = docs_file.read_text()
+    source_1 = """
+linkcheck_ignore = [
+"""
+    source_2 = """
+linkcheck_ignore = []
+"""
+    if not (source_1 in docs or source_2 in docs):
+        raise ValueError("Replacement failed.")
+
+    docs = docs.replace(
+        source_1,
+"""
+linkcheck_ignore = [
+    (
+        r"https://github.com/"
+        r"{{ organisation }}/"
+        r"{{ project_slug }}.*"
+    ),
+"""
+    )
+    docs = docs.replace(
+        source_2,
+"""
+linkcheck_ignore = [
+    (
+        r"https://github.com/"
+        r"{{ organisation }}/"
+        r"{{ project_slug }}.*"
+    ),
+]
+"""
+    )
+    docs_file.write_text(docs)
+
+
+def patch_theme() -> None:
     docs_file = Path("docs/conf.py")
     docs = docs_file.read_text()
     # We handle the case when the dict is empty or contains some elements.
@@ -28,7 +70,11 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/{{ organisation }}/{{ project_slug }}",
+            "url": (
+                "https://github.com/"
+                "{{ organisation }}/"
+                "{{ project_slug }}"
+            ),
             "icon": "fa-brands fa-square-github",
             "type": "fontawesome",
         },
@@ -42,7 +88,11 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/{{ organisation }}/{{ project_slug }}",
+            "url": (
+                "https://github.com/"
+                "{{ organisation }}/"
+                "{{ project_slug }}"
+            ),
             "icon": "fa-brands fa-square-github",
             "type": "fontawesome",
         },
@@ -51,6 +101,14 @@ html_theme_options = {
 """,
     )
     docs_file.write_text(docs)
+
+
+def main() -> None:
+    """Edit documentation configuration file."""
+    patch_theme()
+{%- if code_license_id == "" %}
+    patch_linkcheck()
+{%- endif %}
 
 if __name__ == "__main__":
     main()
