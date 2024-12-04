@@ -103,7 +103,7 @@ jobs:
           cache-from: type=local,src=~/.docker/buildx-cache
           cache-to: type=local,dest=~/.docker/buildx-cache
       - name: Attest
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         id: attest
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
