@@ -7,7 +7,6 @@
 from pathlib import Path
 
 # linkcheck_ignore = [
-    # r"https://pypi\.org/project/.*",
     # r"https://.*\.readthedocs\.io/en/stable/",
 # ]
 
@@ -51,6 +50,7 @@ linkcheck_ignore = [
 
 
 def patch_theme() -> None:
+    """Add GitHub links."""
     docs_file = Path("docs/conf.py")
     docs = docs_file.read_text()
     # We handle the case when the dict is empty or contains some elements.
