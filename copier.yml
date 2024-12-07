@@ -17,7 +17,7 @@ _tasks:
     "--license", "{{ code_license_id }}",
     "--copyright-prefix", "spdx-symbol",
     "--recursive", "--style", "python",
-    ".github/dependabot.yml", ".github/release-drafter.yml", ".github/CODEOWNERS",
+    ".github/release-drafter.yml", ".github/CODEOWNERS",
     ".github/workflows/", ".github/ISSUE_TEMPLATE",
     "pyproject.toml", "hatch.toml",
   ]
@@ -27,7 +27,7 @@ _tasks:
     "--copyright", "SPDX-FileCopyrightText: {{ header }}",
     "--license", "LicenseRef-PROPRIETARY",
     "--recursive", "--style", "python",
-    ".github/dependabot.yml", ".github/release-drafter.yml",  ".github/CODEOWNERS",
+    ".github/release-drafter.yml",  ".github/CODEOWNERS",
     ".github/workflows/", ".github/ISSUE_TEMPLATE",
     "pyproject.toml", "hatch.toml",
   ]
@@ -48,6 +48,7 @@ _tasks:
     "--license", "LicenseRef-PROPRIETARY",
     "--force-dot-license",
     ".github/PULL_REQUEST_TEMPLATE.md",
+    ".github/renovate.json5",
   ]
     when: "{{ resources_license_id == '' }}"
   - command: [
