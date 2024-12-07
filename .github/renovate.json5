@@ -31,6 +31,10 @@
         'dependencies',
         'ci',
       ],
+      "matchPaths": [
+          ".github/workflows/*.yml",
+          "template/.github/workflows/*.yml.jinja",
+      ],
       automerge: true
     },
     {
