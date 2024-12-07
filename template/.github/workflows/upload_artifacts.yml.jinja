@@ -20,15 +20,6 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
-      - name: Set TAG
-        id: vars
-        shell: python
-        run: |
-          import os
-          ref = os.getenv('GITHUB_REF', '')
-          tag = ref.split('/')[-1] if ref else ''
-          with open(os.getenv('GITHUB_OUTPUT'), 'a') as file:
-              file.write(f'tag={tag}\n')
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
@@ -45,7 +36,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ steps.vars.outputs.tag }} dist/** --clobber
+          gh release upload ${{ github.ref_name }} dist/** --clobber
   docs_generation:
     name: Upload documentation
     runs-on: ubuntu-latest
@@ -58,15 +49,6 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
-      - name: Set TAG
-        id: vars
-        shell: python
-        run: |
-          import os
-          ref = os.getenv('GITHUB_REF', '')
-          tag = ref.split('/')[-1] if ref else ''
-          with open(os.getenv('GITHUB_OUTPUT'), 'a') as file:
-              file.write(f'tag={tag}\n')
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
@@ -84,7 +66,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ steps.vars.outputs.tag }} documentation.zip* --clobber
+          gh release upload ${{ github.ref_name }} documentation.zip* --clobber
   sbom_vulnerabilities_generation:
     name: Generate SBOM under Python ${{ matrix.python }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -106,15 +88,6 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
-      - name: Set TAG
-        id: vars
-        shell: python
-        run: |
-          import os
-          ref = os.getenv('GITHUB_REF', '')
-          tag = ref.split('/')[-1] if ref else ''
-          with open(os.getenv('GITHUB_OUTPUT'), 'a') as file:
-              file.write(f'tag={tag}\n')
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
@@ -153,15 +126,6 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
-      - name: Set TAG
-        id: vars
-        shell: python
-        run: |
-          import os
-          ref = os.getenv('GITHUB_REF', '')
-          tag = ref.split('/')[-1] if ref else ''
-          with open(os.getenv('GITHUB_OUTPUT'), 'a') as file:
-              file.write(f'tag={tag}\n')
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
@@ -200,5 +164,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ steps.vars.outputs.tag }} SBOM.zip* --clobber
+          gh release upload ${{ github.ref_name }} SBOM.zip* --clobber
 {%- endraw %}

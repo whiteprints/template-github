@@ -39,6 +39,7 @@ _tasks:
     "--copyright-prefix", "spdx-symbol",
     "--force-dot-license",
     ".github/PULL_REQUEST_TEMPLATE.md",
+    ".github/renovate.json",
   ]
     when: "{{ resources_license_id != '' }}"
   - command: [
