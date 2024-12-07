@@ -31,10 +31,6 @@
         'dependencies',
         'ci',
       ],
-      matchFileNames: [
-        '.github/workflows/*.yml',
-        'template/.github/workflows/*.yml.jinja',
-      ],
       automerge: true,
     },
     {
