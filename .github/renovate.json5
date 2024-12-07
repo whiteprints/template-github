@@ -18,7 +18,7 @@
     extends: [
       'group:all',
     ],
-    automerge: true
+    automerge: true,
   },
   packageRules: [
     {
@@ -31,11 +31,11 @@
         'dependencies',
         'ci',
       ],
-      "matchPaths": [
-          ".github/workflows/*.yml",
-          "template/.github/workflows/*.yml.jinja",
+      matchFileNames: [
+        '.github/workflows/*.yml',
+        'template/.github/workflows/*.yml.jinja',
       ],
-      automerge: true
+      automerge: true,
     },
     {
       matchManagers: [
@@ -47,7 +47,7 @@
         'dependencies',
         'container',
       ],
-      automerge: true
+      automerge: true,
     },
     {
       matchManagers: [
@@ -61,7 +61,7 @@
       labels: [
         'dependencies',
       ],
-      automerge: true
+      automerge: true,
     },
   ],
 }
