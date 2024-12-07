@@ -1,5 +1,5 @@
 {%- raw %}
-name: tests
+name: Tests
 on:
   workflow_dispatch:
   push:
@@ -13,25 +13,25 @@ concurrency:
 
 jobs:
   build-package:
-    name: build and inspect package
+    name: Build and inspect package
     runs-on: ubuntu-latest
     environment:
       name: tests
     steps:
-      - name: check out the repository
+      - name: Check out the repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: build and inspect package
+      - name: Build and inspect package
         id: baipp
         uses: hynek/build-and-inspect-python-package@f01e4d047aadcc0c054c95ec9900da3ec3fc7a0f # v2
-      - name: find latest python
+      - name: Find latest Python
         id: baipp-latest
         run: |
-          echo "supported_python_latest=$(echo '${{ steps.baipp.outputs.supported_python_classifiers_json_array }}' | jq -r -s '.[-1]')" >> "$github_output"
+          echo "supported_python_latest=$(echo '${{ steps.baipp.outputs.supported_python_classifiers_json_array }}' | jq -r -S '.[-1]')" >> "$GITHUB_OUTPUT"
     outputs:
       python-versions: ${{ steps.baipp.outputs.supported_python_classifiers_json_array }}
       python-latest: ${{ steps.baipp-latest.outputs.supported_python_latest }}
   check-types:
-    name: run type checker under python ${{ matrix.python }} on ${{ matrix.os }}
+    name: Run type checker under Python ${{ matrix.python }} on ${{ matrix.os }}
     needs:
       - build-package
     runs-on: ${{ matrix.os }}
@@ -39,23 +39,23 @@ jobs:
       name: tests
     strategy:
       matrix:
-        python: ${{ fromjson(needs.build-package.outputs.python-versions) }}
+        python: ${{ fromJson(needs.build-package.outputs.python-versions) }}
         os:
           - ubuntu-latest
           - macos-latest
           - windows-latest
     steps:
-      - name: check out the repository
+      - name: Check out the repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: install uv
+      - name: Install uv
         uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
         with:
           version: "latest"
           enable-cache: true
-      - name: install project
+      - name: Install project
         run: |
           uv sync --no-dev --group=check-types --python ${{ matrix.python }}
-      - name: run pyright
+      - name: Run Pyright
         uses: jakebailey/pyright-action@b5d50e5cde6547546a5c4ac92e416a8c2c1a1dfe # v2
         with:
           python-version: "${{ matrix.python }}"
@@ -75,17 +75,17 @@ jobs:
           - check-documentation-links
           - build-documentation
     steps:
-      - name: check out the repository
+      - name: Check out the repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: install uv
+      - name: Install uv
         uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
         with:
           version: "latest"
           enable-cache: true
-      - name: run the test suite
+      - name: Run the test suite
         run: |
           uvx --quiet --no-progress --with tox-uv tox run -e ${{ matrix.tox_env }}
-      - name: upload documentation
+      - name: Upload documentation
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         if: "${{ matrix.tox_env == 'build-documentation' }}"
         with:
@@ -93,7 +93,7 @@ jobs:
           path: docs_build/
           overwrite: true
   test:
-    name: run tests under python ${{ matrix.python }} on ${{ matrix.os }}
+    name: Run tests under Python ${{ matrix.python }} on ${{ matrix.os }}
     needs:
       - check
       - check-types
@@ -103,48 +103,48 @@ jobs:
       name: tests
     strategy:
       matrix:
-        python: ${{ fromjson(needs.build-package.outputs.python-versions) }}
+        python: ${{ fromJson(needs.build-package.outputs.python-versions) }}
         os:
           - ubuntu-latest
           - macos-latest
           - windows-latest
     steps:
-      - name: check out the repository
+      - name: Check out the repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: install uv
+      - name: Install uv
         uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
         with:
           version: "latest"
           enable-cache: true
-      - name: download built packages from the build-package job
+      - name: Download built packages from the build-package job
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
         with:
-          name: packages
+          name: Packages
           path: dist
-      - name: pick environment to run
+      - name: Pick environment to run
         run: |
           import os;
-          env = "toxenv=py{}{}\n".format(*"${{ matrix.python }}".split("."))
-          with open(os.environ["github_env"], mode="a", encoding="utf-8") as file_handler:
+          env = "TOXENV=py{}{}\n".format(*"${{ matrix.python }}".split("."))
+          with open(os.environ["GITHUB_ENV"], mode="a", encoding="utf-8") as file_handler:
               file_handler.write(env)
         shell: python
-      - name: run the test suite
+      - name: Run the test suite
         shell: bash
         run: |
-          echo "report_file=.tox/test_report.md" >> "$github_env"
+          echo "REPORT_FILE=.tox/test_report.md" >> "$GITHUB_ENV"
           uvx --quiet --no-progress --with tox-uv tox run --installpkg dist/*.whl
-      - name: output reports to the job summary when tests fail
+      - name: Output reports to the job summary when tests fail
         if: failure()
         shell: bash
         run: |
-          if [ -f "$report_file" ]; then
-            echo "<details><summary>failed test report</summary>" >> $github_step_summary
-            echo "" >> $github_step_summary
-            cat "$report_file" >> $github_step_summary
-            echo "" >> $github_step_summary
-            echo "</details>" >> $github_step_summary
+          if [ -f "$REPORT_FILE" ]; then
+            echo "<details><summary>Failed Test Report</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat "$REPORT_FILE" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
           fi
-      - name: upload coverage data
+      - name: Upload coverage data
         if: always()
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
@@ -152,7 +152,7 @@ jobs:
           path: .tox/.coverage.*
           overwrite: true
           include-hidden-files: true
-      - name: upload test results
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
@@ -161,65 +161,65 @@ jobs:
           overwrite: true
           include-hidden-files: true
   container-deploy:
-    name: build container
+    name: Build Container
     needs:
       - build-package
     runs-on: ubuntu-latest
     environment:
       name: tests
     env:
-      registry: ghcr.io
-      python: "${{ needs.build-package.outputs.python-versions }}"
+      REGISTRY: ghcr.io
+      PYTHON: "${{ needs.build-package.outputs.python-versions }}"
     strategy:
       matrix:
         image:
           - name: alpine
           - name: debian
     steps:
-      - name: check out the repository
+      - name: Check out the repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: download built packages from the build-package job
+      - name: Download built packages from the build-package job
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
         with:
-          name: packages
+          name: Packages
           path: dist
-      - name: set up qemu
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3
-      - name: set up docker buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3
-      - name: set up docker metadata
+      - name: Set up Docker Metadata
         id: meta
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5
         with:
-          images: ${{ env.registry }}/${{ github.repository }}
+          images: ${{ env.REGISTRY }}/${{ github.repository }}
           tags: |
             type=pep440,pattern={{version}},event=tag
             type=ref,event=branch,prefix=latest-
             type=sha
-      - name: log in to the container registry
+      - name: Log in to the Container registry
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3
         with:
-          registry: ${{ env.registry }}
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.github_token }}
-      - name: set build_date
-        run: echo "build_date=$(date -u +"%y-%m-%dt%h:%m:%sz")" >> $github_env
-      - name: build
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set BUILD_DATE
+        run: echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+      - name: Build
         uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6
         with:
           context: .
-          file: ./container/containerfile.${{ matrix.image.name }}
+          file: ./container/Containerfile.${{ matrix.image.name }}
           tags: |
             ${{ steps.meta.outputs.tags }}-${{ matrix.image.name }}
           annotations: ${{ steps.meta.outputs.annotations }}
           build-args: |
-            version=${{ steps.meta.outputs.version }}
-            revision=${{ github.sha }}
-            build_date=${{ env.build_date }}
+            VERSION=${{ steps.meta.outputs.version }}
+            REVISION=${{ github.sha }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
           cache-from: type=local,src=~/.docker/buildx-cache
           cache-to: type=local,dest=~/.docker/buildx-cache
   coverage:
-    name: coverage
+    name: Coverage
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -229,26 +229,26 @@ jobs:
       - test
       - container-deploy
     steps:
-      - name: check out the repository
+      - name: Check out the repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: install uv
+      - name: Install uv
         uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
         with:
           version: "latest"
           enable-cache: true
-      - name: download coverage data
+      - name: Download coverage data
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
         with:
           pattern: coverage-data-*
           merge-multiple: true
           path: .tox/
-      - name: run coverage
+      - name: Run coverage
         run: |
           uvx --quiet --no-progress --with tox-uv tox run -e coverage-combine
           uvx --quiet --no-progress --with tox-uv tox run -e coverage-report
           uvx --quiet --no-progress --with tox-uv tox run -e coverage
-          uvx --quiet --no-progress --with tox-uv tox run --quiet --quiet -e coverage -- --format=markdown >> $github_step_summary
-      - name: upload coverage report to codecov
+          uvx --quiet --no-progress --with tox-uv tox run --quiet --quiet -e coverage -- --format=markdown >> $GITHUB_STEP_SUMMARY
+      - name: Upload coverage report to CodeCov
         if: always()
         uses: codecov/codecov-action@7f8b4b4bde536c465e797be725718b88c5d95e0e # v5
         with:
