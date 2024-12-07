@@ -1,19 +1,64 @@
 {%- raw %}
-name: Tests
+name: tests
 on:
   workflow_dispatch:
   push:
     branches: ["main"]
     tags-ignore: ["**"]
   pull_request:
-  schedule:
-    - cron: "0 8 * * *"
 
 concurrency:
   group: test-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  build-package:
+    name: build and inspect package
+    runs-on: ubuntu-latest
+    environment:
+      name: tests
+    steps:
+      - name: check out the repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: build and inspect package
+        id: baipp
+        uses: hynek/build-and-inspect-python-package@f01e4d047aadcc0c054c95ec9900da3ec3fc7a0f # v2
+      - name: find latest python
+        id: baipp-latest
+        run: |
+          echo "supported_python_latest=$(echo '${{ steps.baipp.outputs.supported_python_classifiers_json_array }}' | jq -r -s '.[-1]')" >> "$github_output"
+    outputs:
+      python-versions: ${{ steps.baipp.outputs.supported_python_classifiers_json_array }}
+      python-latest: ${{ steps.baipp-latest.outputs.supported_python_latest }}
+  check-types:
+    name: run type checker under python ${{ matrix.python }} on ${{ matrix.os }}
+    needs:
+      - build-package
+    runs-on: ${{ matrix.os }}
+    environment:
+      name: tests
+    strategy:
+      matrix:
+        python: ${{ fromjson(needs.build-package.outputs.python-versions) }}
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    steps:
+      - name: check out the repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: install uv
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
+        with:
+          version: "latest"
+          enable-cache: true
+      - name: install project
+        run: |
+          uv sync --no-dev --group=check-types --python ${{ matrix.python }}
+      - name: run pyright
+        uses: jakebailey/pyright-action@b5d50e5cde6547546a5c4ac92e416a8c2c1a1dfe # v2
+        with:
+          python-version: "${{ matrix.python }}"
   check:
     name: tox env ${{ matrix.tox_env }}
     runs-on: ubuntu-latest
@@ -27,234 +72,189 @@ jobs:
           - check-vulnerabilities
           - check-exceptions
           - check-code-maintainability
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
-      - name: Run the test suite
-        run: |
-          uvx --quiet --no-progress --with tox-uv tox run -e ${{ matrix.tox_env }}
-  distribute:
-    name: tox env ${{ matrix.tox_env }}
-    runs-on: ubuntu-latest
-    environment:
-      name: tests
-    strategy:
-      matrix:
-        tox_env:
-          - distribute
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
-          enable-cache: true
-      - name: Run the test suite
-        run: |
-          uvx --quiet --no-progress --with tox-uv tox run -e ${{ matrix.tox_env }}
-      - name: Upload documentation
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.tox_env }}
-          path: dist/
-          overwrite: true
-  documentation:
-    name: tox env ${{ matrix.tox_env }}
-    runs-on: ubuntu-latest
-    environment:
-      name: tests
-    strategy:
-      matrix:
-        tox_env:
-{%- endraw %}
-{%- if resources_license_id != "" %}
           - check-documentation-links
-{%- endif %}
-{%- raw %}
           - build-documentation
     steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
+      - name: check out the repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: install uv
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
         with:
           version: "latest"
           enable-cache: true
-      - name: Run the test suite
+      - name: run the test suite
         run: |
           uvx --quiet --no-progress --with tox-uv tox run -e ${{ matrix.tox_env }}
-      - name: Upload documentation
-        uses: actions/upload-artifact@v4
+      - name: upload documentation
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
+        if: "${{ matrix.tox_env == 'build-documentation' }}"
         with:
-          name: ${{ matrix.tox_env }}
+          name: documentation
           path: docs_build/
           overwrite: true
   test:
-    name: Run tests under Python ${{ matrix.python }} on ${{ matrix.os }}
-    needs: check
+    name: run tests under python ${{ matrix.python }} on ${{ matrix.os }}
+    needs:
+      - check
+      - check-types
+      - build-package
     runs-on: ${{ matrix.os }}
     environment:
       name: tests
     strategy:
       matrix:
-        python:
-{%- endraw %}
-{%- for i in range(target_python_version[3:] | int, latest_python) %}
-          - "3.{{ i }}"
-{%- endfor %}
-          - "3.{{ latest_python }}"
-{%- raw %}
+        python: ${{ fromjson(needs.build-package.outputs.python-versions) }}
         os:
           - ubuntu-latest
           - macos-latest
           - windows-latest
     steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
+      - name: check out the repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: install uv
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
         with:
           version: "latest"
           enable-cache: true
-      - name: Install project
-        run: |
-          uv sync --python ${{ matrix.python }}
-      - name: Run Pyright
-        uses: jakebailey/pyright-action@v2
+      - name: download built packages from the build-package job
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
         with:
-          python-version: "${{ matrix.python }}"
-      - name: Pick environment to run
+          name: packages
+          path: dist
+      - name: pick environment to run
         run: |
           import os;
-          env = "TOXENV=py{}{}-test\n".format(*"${{ matrix.python }}".split("."))
-          with open(os.environ["GITHUB_ENV"], mode="a", encoding="utf-8") as file_handler:
+          env = "toxenv=py{}{}\n".format(*"${{ matrix.python }}".split("."))
+          with open(os.environ["github_env"], mode="a", encoding="utf-8") as file_handler:
               file_handler.write(env)
         shell: python
-      - name: Run the test suite
+      - name: run the test suite
         shell: bash
         run: |
-          echo "REPORT_FILE=.tox/test_report.md" >> "$GITHUB_ENV"
-          uvx --quiet --no-progress --with tox-uv tox run
-      - name: Output reports to the job summary when tests fail
+          echo "report_file=.tox/test_report.md" >> "$github_env"
+          uvx --quiet --no-progress --with tox-uv tox run --installpkg dist/*.whl
+      - name: output reports to the job summary when tests fail
         if: failure()
         shell: bash
         run: |
-          if [ -f "$REPORT_FILE" ]; then
-            echo "<details><summary>Failed Test Report</summary>" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            cat "$REPORT_FILE" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          if [ -f "$report_file" ]; then
+            echo "<details><summary>failed test report</summary>" >> $github_step_summary
+            echo "" >> $github_step_summary
+            cat "$report_file" >> $github_step_summary
+            echo "" >> $github_step_summary
+            echo "</details>" >> $github_step_summary
           fi
-      - name: Upload coverage data
+      - name: upload coverage data
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
           name: coverage-data-${{ matrix.os }}-${{ matrix.python }}
           path: .tox/.coverage.*
           overwrite: true
           include-hidden-files: true
-      - name: Upload test results
+      - name: upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
           name: test-results-${{ matrix.os }}-${{ matrix.python }}
           path: .tox/junit.*
           overwrite: true
           include-hidden-files: true
   container-deploy:
-    name: Build Container
+    name: build container
+    needs:
+      - build-package
     runs-on: ubuntu-latest
     environment:
       name: tests
     env:
-      REGISTRY: ghcr.io
+      registry: ghcr.io
+      python: "${{ needs.build-package.outputs.python-versions }}"
     strategy:
       matrix:
         image:
           - name: alpine
-            python: 3.13
-            base: alpine3.20
-            digest: ""
           - name: debian
-            python: 3.13
-            base: slim-bookworm
-            digest: ""
     steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Set up Docker Metadata
-        id: meta
-        uses: docker/metadata-action@v5
+      - name: check out the repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: download built packages from the build-package job
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
         with:
-{%- endraw %}
-          images: ${{ '{{' }} env.REGISTRY {{ '}}' }}/${{ '{{' }} github.repository {{ '}}' }}
-{%- raw %}
+          name: packages
+          path: dist
+      - name: set up qemu
+        uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3
+      - name: set up docker metadata
+        id: meta
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5
+        with:
+          images: ${{ env.registry }}/${{ github.repository }}
           tags: |
             type=pep440,pattern={{version}},event=tag
             type=ref,event=branch,prefix=latest-
             type=sha
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
+      - name: log in to the container registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ env.registry }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set BUILD_DATE
-        run: echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
-      - name: Build
-        uses: docker/build-push-action@v6
+          password: ${{ secrets.github_token }}
+      - name: set build_date
+        run: echo "build_date=$(date -u +"%y-%m-%dt%h:%m:%sz")" >> $github_env
+      - name: build
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6
         with:
           context: .
-          file: ./container/Containerfile.${{ matrix.image.name }}
+          file: ./container/containerfile.${{ matrix.image.name }}
           tags: |
-            ${{ steps.meta.outputs.tags }}-${{ matrix.image.base }}
+            ${{ steps.meta.outputs.tags }}-${{ matrix.image.name }}
           annotations: ${{ steps.meta.outputs.annotations }}
           build-args: |
-            PYTHON_VERSION=${{ matrix.image.python }}
-            BASE_OS=${{ matrix.image.base }}
-            DIGEST=${{ matrix.image.digest }}
-            VERSION=${{ steps.meta.outputs.version }}
-            REVISION=${{ github.sha }}
-            BUILD_DATE=${{ env.BUILD_DATE }}
+            version=${{ steps.meta.outputs.version }}
+            revision=${{ github.sha }}
+            build_date=${{ env.build_date }}
           cache-from: type=local,src=~/.docker/buildx-cache
           cache-to: type=local,dest=~/.docker/buildx-cache
   coverage:
-    name: Coverage
+    name: coverage
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     environment:
       name: coverage
     needs:
       - test
       - container-deploy
-      - documentation
-      - distribute
     steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
+      - name: check out the repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: install uv
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
         with:
           version: "latest"
           enable-cache: true
-      - name: Download coverage data
-        uses: actions/download-artifact@v4
+      - name: download coverage data
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
         with:
           pattern: coverage-data-*
           merge-multiple: true
           path: .tox/
-      - name: Run coverage
+      - name: run coverage
         run: |
           uvx --quiet --no-progress --with tox-uv tox run -e coverage-combine
+          uvx --quiet --no-progress --with tox-uv tox run -e coverage-report
           uvx --quiet --no-progress --with tox-uv tox run -e coverage
-          uvx --quiet --no-progress --with tox-uv tox run --quiet --quiet -e coverage -- --format=markdown >> $GITHUB_STEP_SUMMARY
+          uvx --quiet --no-progress --with tox-uv tox run --quiet --quiet -e coverage -- --format=markdown >> $github_step_summary
+      - name: upload coverage report to codecov
+        if: always()
+        uses: codecov/codecov-action@7f8b4b4bde536c465e797be725718b88c5d95e0e # v5
+        with:
+          name: codecov-umbrella
+          verbose: true
+          flags: pytest
+          file: .tox/.coverage.xml
+          use_oidc: true
 {%- endraw %}
