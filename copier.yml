@@ -69,10 +69,7 @@ _tasks:
   ]
     when: "{{ resources_license_id == '' }}"
   - ["git", "add", "docs/", ".github"]
-  - [
-      "uvx", "--python", "3.{{ target_python_version[3:] }}", "--quiet", "--no-progress", "--with", "tox-uv",
-      "tox", "run", "-e", "autofix", "--"
-  ]
+  - ["uvx", "--from", "rust-just", "just", "autofix"]
   - ["git", "add", "docs/", ".github"]
   - ["git", "add", "--update"]
   - ["git", "commit", "--message", "feat: ✨ add GitHub CI/CD"]
