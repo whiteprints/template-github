@@ -6,8 +6,7 @@
 # Uncomment this to use project local uv cache.
 # export UV_CACHE_DIR := ".just/.cache/uv"
 export UV_NO_PROGRESS := "true"
-
-GH_TOKEN := env("GH_TOKEN", "")
+export GH_TOKEN := env("GH_TOKEN", "")
 
 
 # list all receipts
