@@ -4,7 +4,6 @@
 # ///
 """Module to update `pyproject.toml` with new entry points."""
 
-import os
 import subprocess  # nosec
 import shutil
 from pathlib import Path
@@ -21,10 +20,8 @@ def get_github_username() -> Optional[str]:
         [gh_path, "api", "user", "-q", ".login"],
         text=True,
         capture_output=True,
-        check=False,
-        env={"GH_TOKEN": os.environ["GH_TOKEN"]},
+        check=True,
     )
-    print(result)
     return result.stdout.strip()
 
 

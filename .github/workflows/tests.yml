@@ -38,8 +38,6 @@ jobs:
     needs: check
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
-    env:
-      GH_TOKEN: ${{ github.token }}
     strategy:
       fail-fast: true
       matrix:
@@ -63,6 +61,9 @@ jobs:
         uses: astral-sh/setup-uv@887a942a15af3a7626099df99e897a18d9e5ab3a # v5
       - name: Install just
         uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
+      - name: Github Login
+        run: |
+          echo "${{ secrets.GH_TOKEN }}" | gh auth login --with-token
       - name: Run the test suite
         run: |
           just test-${{ matrix.diffusion }} ${{ matrix.python }}
