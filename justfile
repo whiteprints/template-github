@@ -7,6 +7,8 @@
 # export UV_CACHE_DIR := ".just/.cache/uv"
 export UV_NO_PROGRESS := "true"
 
+GH_TOKEN := env("GH_TOKEN") || ""
+
 
 # list all receipts
 default:
