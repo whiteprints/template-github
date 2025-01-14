@@ -22,7 +22,7 @@ def get_github_username() -> Optional[str]:
         text=True,
         capture_output=True,
         check=True,
-        env=os.environ["GH_TOKEN"],
+        env={"GH_TOKEN": os.environ["GH_TOKEN"]},
     )
     return result.stdout.strip()
 
