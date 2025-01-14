@@ -70,8 +70,12 @@ uvx args="":
         {{ args }} \
     "
 
+# Remove the test repository
+delete-repostitory
+    -gh repo delete --yes "whiteprints-tests/test-gh-{{ os() }}-$(echo {{ python }} | tr -d .)"
+
 # Test the template
-test python license: (venv "test" python license)
+test python license: (venv "test" python license) delete-repostitory && delete-repostitory
     @just uvx "\
         --with whiteprints-template-context \
         copier copy \
@@ -99,7 +103,6 @@ test python license: (venv "test" python license)
         https://github.com/whiteprints/template-rich-click.git \
         '{{ justfile_directory() }}/.just/test/{{ license }}/{{ python }}/tmp'\
     "
-    -gh repo delete --yes "whiteprints-tests/test-gh-{{ os() }}-$(echo {{ python }} | tr -d .)"
     @just uvx "\
         --with whiteprints-template-context \
         copier copy \
@@ -116,7 +119,6 @@ test python license: (venv "test" python license)
         ' \
         --from rust-just just all\
     "
-    -gh repo delete --yes "whiteprints-tests/test-gh-{{ os() }}-$(echo {{ python }} | tr -d .)"
 
 test-open-source python:
     @just test {{ python }} "MIT OR Apache-2.0"
