@@ -71,7 +71,7 @@ uvx args="":
     "
 
 # Remove the test repository
-delete-repostitory
+delete-repostitory:
     -gh repo delete --yes "whiteprints-tests/test-gh-{{ os() }}-$(echo {{ python }} | tr -d .)"
 
 # Test the template
