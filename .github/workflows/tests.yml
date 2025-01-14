@@ -39,7 +39,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     env:
-      GH_TOKEN: toto
+      GH_TOKEN: ${{ github.token }}
     strategy:
       fail-fast: true
       matrix:
