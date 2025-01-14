@@ -100,6 +100,7 @@ test python license: (venv "test" python license)
         '{{ justfile_directory() }}/.just/test/{{ license }}/{{ python }}/tmp'\
     "
     -gh repo delete --yes "whiteprints-tests/test-gh-{{ os() }}-$(echo {{ python }} | tr -d .)"
+    echo $GH_TOKEN
     @just uvx "\
         --with whiteprints-template-context \
         copier copy \
