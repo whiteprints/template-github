@@ -75,7 +75,7 @@ delete-repostitory python:
     gh repo delete --yes "whiteprints-tests/test-gh-{{ os() }}-$(echo {{ python }} | tr -d .)"
 
 # Test the template
-test python license: (venv "test" python license) (delete-repostitory python) || (delete-repostitory python)
+test python license: (venv "test" python license) (delete-repostitory python) && (delete-repostitory python)
     @just uvx "\
         --with whiteprints-template-context \
         copier copy \
