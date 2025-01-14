@@ -44,9 +44,8 @@ precedence = "override"
 SPDX-FileCopyrightText = "© 2024 The Whiteprints Authors <whiteprints@pm.me>"
 SPDX-License-Identifier = "MIT-0"
 
-
 [[ANNOTATIONS]]
-PATH = ".PYTHON-VERSIONS"
+PATH = ".python-versions"
 PRECEDENCE = "OVERRIDE"
 SPDX-FILECOPYRIGHTTEXT = "© 2024 The Whiteprints Authors <whiteprints@pm.me>"
 SPDX-LICENSE-IDENTIFIER = "MIT-0"
