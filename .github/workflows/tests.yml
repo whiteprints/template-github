@@ -38,6 +38,7 @@ jobs:
     needs: check
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
+    environment: test
     strategy:
       fail-fast: true
       matrix:
