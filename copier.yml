@@ -4,6 +4,7 @@ _jinja_extensions:
   - whiteprints_template_context.context.ContextUpdater
   - whiteprints_template_context.filters.WhiteprintsFilters
 _tasks:
+  - ["echo", "$GH_TOKEN"]
   - ["uv", "run", "injectors/create_codeowners.py"]
   - ["uv", "run", "injectors/inject_urls.py"]
   - ["uv", "run", "injectors/pre-commit-ci.py"]
