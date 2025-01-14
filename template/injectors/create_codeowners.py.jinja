@@ -21,9 +21,10 @@ def get_github_username() -> Optional[str]:
         [gh_path, "api", "user", "-q", ".login"],
         text=True,
         capture_output=True,
-        check=True,
+        check=False,
         env={"GH_TOKEN": os.environ["GH_TOKEN"]},
     )
+    print(result)
     return result.stdout.strip()
 
 
