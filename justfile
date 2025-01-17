@@ -72,7 +72,11 @@ uvx args="":
 
 # Remove the test repository
 delete-repostitory python license:
-    -gh repo delete --yes "whiteprints-tests/test-gh-{{ kebabcase(license) }}-{{ os() }}-$(echo {{ python }} | tr -d .)"
+    -gh repo delete --yes "\
+        whiteprints-tests/test-gh\
+        {{ if license == '' { '-' }  else { prepend('-', append('-', kebabcase(license))) } }}\
+        {{ os() }}-$(echo {{ python }} | tr -d .)\
+    "
 
 # Test the template
 test python license: (venv "test" python license) (delete-repostitory python license) && (delete-repostitory python license)
