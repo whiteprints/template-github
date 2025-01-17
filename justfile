@@ -72,7 +72,7 @@ uvx args="":
 
 # Remove the test repository
 delete-repostitory python license:
-    -gh repo delete --yes "whiteprints-tests/test-gh-{{ license }}-{{ os() }}-$(echo {{ python }} | tr -d .)"
+    -gh repo delete --yes "whiteprints-tests/test-gh-{{ kebabcase(license) }}-{{ os() }}-$(echo {{ python }} | tr -d .)"
 
 # Test the template
 test python license: (venv "test" python license) (delete-repostitory python license) && (delete-repostitory python license)
@@ -83,7 +83,7 @@ test python license: (venv "test" python license) (delete-repostitory python lic
         --force \
         https://github.com/whiteprints/template-python.git \
         '{{ justfile_directory() }}/.just/test/{{ license }}/{{ python }}/tmp' \
-        --data project_name='test gh {{ license }} {{ os() }} {{ python }}' \
+        --data project_name='test gh {{ kebabcase(license) }} {{ os() }} {{ python }}' \
         --data author='Romain Brault' \
         --data organisation='whiteprints-tests' \
         --data author_email='mail@romainbrault.com' \
